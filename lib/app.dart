@@ -16,7 +16,7 @@ class _AppState extends State<App> {
   String? userData;
   bool? isLoggedIn;
 
-  _getUserType() async {
+  Future<void> _getUserType() async {
     var prefs = await SharedPreferences.getInstance();
 
     setState(() {

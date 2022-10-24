@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk.dart';
 import 'package:sakay_v2/components/main_layout.dart';
 import 'package:sakay_v2/screens/dashboard/index.dart';
+import 'package:sakay_v2/screens/entry/login.dart';
 import 'package:sakay_v2/static/route.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -41,6 +42,8 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     return MainLayout(
+      floatingActionButton: null,
+      bottomNavigationBar: null,
       title: "Register User",
       widget: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -242,8 +245,8 @@ class AlreadyHaveAccount extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [
-          Text(
+        children: [
+          const Text(
             'Already have an account?',
             style: TextStyle(
               color: Color(0xff50524f),
@@ -252,15 +255,20 @@ class AlreadyHaveAccount extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          Text(
-            'Sign in',
-            style: TextStyle(
-              color: Color(0xff50524f),
-              fontFamily: 'Montserrat',
-              fontSize: 18,
-              fontWeight: FontWeight.w400,
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).push(buildRoute(const Login()));
+            },
+            child: const Text(
+              'Sign in',
+              style: TextStyle(
+                color: Color(0xff50524f),
+                fontFamily: 'Montserrat',
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
+              ),
             ),
-          )
+          ),
         ],
       ),
     );

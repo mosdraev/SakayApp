@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk.dart';
 import 'package:sakay_v2/components/main_layout.dart';
 import 'package:sakay_v2/screens/dashboard/index.dart';
+import 'package:sakay_v2/screens/entry/register.dart';
 import 'package:sakay_v2/static/route.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,6 +37,8 @@ class _LoginState extends State<Login> {
     if (response.success) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
+      var userType = {"mobileNumber": mobileNumberController.text};
+      await prefs.setString('userType', userType.toString());
       navigator.push(buildRoute(const Index()));
     } else {
       setState(() {
@@ -47,7 +50,9 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return MainLayout(
-      title: 'Login',
+      floatingActionButton: null,
+      bottomNavigationBar: null,
+      title: 'Login User',
       showBackButton: false,
       widget: Form(
         key: _formKey,
@@ -191,11 +196,11 @@ class NewUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 65, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: const [
-          Text(
+        children: [
+          const Text(
             'New user?',
             style: TextStyle(
               color: Color(0xff50524f),
@@ -204,15 +209,21 @@ class NewUser extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          Text(
-            'Create Account',
-            style: TextStyle(
-              color: Color(0xff50524f),
-              fontFamily: 'Montserrat',
-              fontSize: 18,
-              fontWeight: FontWeight.w400,
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                  buildRoute(const Register(type: 2000, label: 'Passenger')));
+            },
+            child: const Text(
+              'Create Account',
+              style: TextStyle(
+                color: Color(0xff50524f),
+                fontFamily: 'Montserrat',
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
+              ),
             ),
-          )
+          ),
         ],
       ),
     );

@@ -15,6 +15,8 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return MainLayout(
+      floatingActionButton: null,
+      bottomNavigationBar: null,
       showBackButton: true,
       title: '',
       widget: Container(
@@ -43,40 +45,42 @@ class StartButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.fromLTRB(60, 20, 60, 20),
-      child: ElevatedButton(
-        onPressed: () => {
-          Navigator.of(context).push(buildRoute(const SelectUser())),
-        },
-        style: ElevatedButton.styleFrom(
-          elevation: 15,
-          backgroundColor: buttonBackgroundColor,
-          shape: const StadiumBorder(),
-          padding: const EdgeInsets.fromLTRB(0, 2.0, 2.0, 2.0),
-          textStyle: const TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-          ),
-          foregroundColor: Colors.white70,
-          side: const BorderSide(
-            width: 5,
-            color: Colors.white70,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            SizedBox(width: 80),
-            Text('START'),
-            SizedBox(width: 20),
-            Icon(
-              size: 60,
-              color: Colors.white70,
-              Icons.play_circle_fill_outlined,
+    return Center(
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.fromLTRB(60, 20, 60, 20),
+        child: ElevatedButton(
+          onPressed: () => {
+            Navigator.of(context).push(buildRoute(const SelectUser())),
+          },
+          style: ElevatedButton.styleFrom(
+            elevation: 15,
+            backgroundColor: buttonBackgroundColor,
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.fromLTRB(0, 2.0, 2.0, 2.0),
+            textStyle: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
             ),
-          ],
+            foregroundColor: Colors.white70,
+            side: const BorderSide(
+              width: 5,
+              color: Colors.white70,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              SizedBox(width: 80),
+              Text('START'),
+              SizedBox(width: 20),
+              Icon(
+                size: 60,
+                color: Colors.white70,
+                Icons.play_circle_fill_outlined,
+              ),
+            ],
+          ),
         ),
       ),
     );

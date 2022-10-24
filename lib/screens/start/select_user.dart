@@ -9,6 +9,8 @@ class SelectUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MainLayout(
+      floatingActionButton: null,
+      bottomNavigationBar: null,
       showBackButton: false,
       title: '',
       widget: Container(

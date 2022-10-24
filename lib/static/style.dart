@@ -22,3 +22,10 @@ const buttonTextStyle = TextStyle(
   fontSize: 32,
   color: Color(0xff50524f),
 );
+
+const lookForRideStyle = TextStyle(
+  fontFamily: defaultFont,
+  fontWeight: FontWeight.w500,
+  fontSize: 18,
+  color: Color(0xffffffff),
+);

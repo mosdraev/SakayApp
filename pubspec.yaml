@@ -21,6 +21,7 @@ dependencies:
   shared_preferences: ^2.0.15
   curved_navigation_bar: ^1.0.3
   flutter_native_splash: ^2.2.10+1
+  flutter_radar: ^3.0.2
 
 dev_dependencies:
   flutter_test:
