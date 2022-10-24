@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk.dart';
+import 'package:sakay_v2/api/service.dart';
 import 'package:sakay_v2/components/main_layout.dart';
 import 'package:sakay_v2/screens/dashboard/index.dart';
 import 'package:sakay_v2/screens/entry/register.dart';
@@ -35,10 +36,11 @@ class _LoginState extends State<Login> {
         response = await userObject.login();
 
     if (response.success) {
+      var loggedInUser = await Service.getUser();
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
-      var userType = {"mobileNumber": mobileNumberController.text};
-      await prefs.setString('userType', userType.toString());
+      await prefs.setString('mobileNumber', mobileNumberController.text);
+      await prefs.setString('objectId', loggedInUser['objectId']);
+      await prefs.setString('sessionToken', loggedInUser['sessionToken']);
       navigator.push(buildRoute(const Index()));
     } else {
       setState(() {

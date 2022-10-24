@@ -1,10 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:sakay_v2/components/main_layout.dart';
 import 'package:sakay_v2/components/select_dropdown.dart';
+import 'package:sakay_v2/models/id_type.dart';
 import 'package:sakay_v2/static/style.dart';
 
-class PrepareRide extends StatelessWidget {
+class PrepareRide extends StatefulWidget {
   const PrepareRide({super.key});
+
+  @override
+  State<PrepareRide> createState() => _PrepareRideState();
+}
+
+class _PrepareRideState extends State<PrepareRide> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  List<CustomDropdownItems> selectRiders = <CustomDropdownItems>[
+    const CustomDropdownItems(100, 'SSS'),
+    const CustomDropdownItems(200, 'Drivers License'),
+    const CustomDropdownItems(300, 'UMID'),
+  ];
+
+  List<CustomDropdownItems> selectPlaces = <CustomDropdownItems>[
+    const CustomDropdownItems(100, 'SSS'),
+    const CustomDropdownItems(200, 'Drivers License'),
+    const CustomDropdownItems(300, 'UMID'),
+  ];
+
+  var idType;
+
+  void selectOption(CustomDropdownItems? value) {
+    setState(() {
+      idType = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,19 +99,23 @@ class PrepareRide extends StatelessWidget {
                 ),
               ),
             ),
-            const SelectDropdown(
+            SelectDropdown(
               label: "Choose a saved place",
-              icon: Icon(
+              icon: const Icon(
                 Icons.place_outlined,
                 color: Colors.black26,
               ),
+              itemOptions: selectPlaces,
+              callback: selectOption,
             ),
-            const SelectDropdown(
+            SelectDropdown(
               label: "Choose a rider",
-              icon: Icon(
+              icon: const Icon(
                 Icons.drive_eta_outlined,
                 color: Colors.black26,
               ),
+              itemOptions: selectRiders,
+              callback: selectOption,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 10),

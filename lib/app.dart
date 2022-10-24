@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sakay_v2/screens/dashboard/index.dart';
 import 'package:sakay_v2/screens/entry/login.dart';
-import 'package:sakay_v2/screens/start/home.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,15 +12,15 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  String? userData;
-  bool? isLoggedIn;
+  String? objectId;
+  String? sessionToken;
 
   Future<void> _getUserType() async {
     var prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      userData = prefs.getString('userType');
-      isLoggedIn = prefs.getBool('isLoggedIn');
+      objectId = prefs.getString('objectId');
+      sessionToken = prefs.getString('sessionToken');
     });
   }
 
@@ -32,13 +31,10 @@ class _AppState extends State<App> {
   }
 
   Widget showScreen() {
-    if (userData != null) {
-      if (isLoggedIn == true) {
-        return const Index();
-      }
+    if (objectId == null && sessionToken == null) {
       return const Login();
     } else {
-      return const Home();
+      return const Index();
     }
   }
 

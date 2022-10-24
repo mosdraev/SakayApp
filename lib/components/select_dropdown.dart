@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:sakay_v2/models/id_type.dart';
 
 class SelectDropdown extends StatefulWidget {
-  const SelectDropdown({super.key, required this.label, required this.icon});
+  const SelectDropdown({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.itemOptions,
+    required this.callback,
+  });
 
   final String label;
-  final Icon icon;
+  final Icon? icon;
+  final List<dynamic> itemOptions;
+  final Function(CustomDropdownItems? value) callback;
 
   @override
   State<SelectDropdown> createState() => _SelectDropdownState();
@@ -13,11 +22,9 @@ class SelectDropdown extends StatefulWidget {
 class _SelectDropdownState extends State<SelectDropdown> {
   String? value;
 
-  final items = ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'];
-
-  DropdownMenuItem<String> buildMenuItem(String item) => DropdownMenuItem(
+  DropdownMenuItem<CustomDropdownItems> buildMenuItem(item) => DropdownMenuItem(
         value: item,
-        child: Text(item),
+        child: Text(item.name),
       );
 
   @override
@@ -28,10 +35,8 @@ class _SelectDropdownState extends State<SelectDropdown> {
       child: DropdownButtonHideUnderline(
         child: DropdownButtonFormField(
           isExpanded: true,
-          items: items.map(buildMenuItem).toList(),
-          onChanged: (value) => setState(() {
-            this.value = value;
-          }),
+          items: widget.itemOptions.map(buildMenuItem).toList(),
+          onChanged: widget.callback,
           decoration: InputDecoration(
             labelText: widget.label,
             prefixIcon: widget.icon,

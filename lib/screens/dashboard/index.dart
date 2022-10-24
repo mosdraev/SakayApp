@@ -13,6 +13,22 @@ class Index extends StatefulWidget {
 }
 
 class _IndexState extends State<Index> {
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _getUser();
+  // }
+
+  // var currentUser;
+
+  // _getUser() async {
+  //   var user = await Service.getUser();
+  //   setState(() {
+  //     currentUser = user;
+  //   });
+  //   print(currentUser);
+  // }
+
   int selectedIndex = 0;
 
   final titles = [

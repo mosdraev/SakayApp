@@ -14,4 +14,9 @@ class Service {
     await Parse().initialize(keyApplicationId, keyParseServerUrl,
         clientKey: keyClientKey, autoSendSessionId: true);
   }
+
+  static getUser() async {
+    ParseUser? currentUser = await ParseUser.currentUser() as ParseUser?;
+    return currentUser;
+  }
 }
