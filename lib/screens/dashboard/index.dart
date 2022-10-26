@@ -2,39 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:sakay_v2/components/main_layout.dart';
 import 'package:sakay_v2/screens/dashboard/look_for_ride.dart';
 import 'package:sakay_v2/screens/dashboard/places.dart';
-import 'package:sakay_v2/screens/profile/settings.dart';
+import 'package:sakay_v2/screens/profile/setting.dart';
 import 'package:sakay_v2/static/style.dart';
 
 class Index extends StatefulWidget {
-  const Index({super.key});
+  const Index({super.key, required this.defaultIndex});
+
+  final int defaultIndex;
 
   @override
   State<Index> createState() => _IndexState();
 }
 
 class _IndexState extends State<Index> {
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _getUser();
-  // }
-
-  // var currentUser;
-
-  // _getUser() async {
-  //   var user = await Service.getUser();
-  //   setState(() {
-  //     currentUser = user;
-  //   });
-  //   print(currentUser);
-  // }
-
   int selectedIndex = 0;
 
   final titles = [
     'Home',
-    'Places Traveled',
-    'Profile Settings',
+    'Places',
+    'Settings',
   ];
 
   final screens = [
@@ -42,6 +28,16 @@ class _IndexState extends State<Index> {
     const Places(),
     const Settings(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      if (widget.defaultIndex > 0) {
+        selectedIndex = widget.defaultIndex;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

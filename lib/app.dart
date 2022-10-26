@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sakay_v2/screens/dashboard/index.dart';
 import 'package:sakay_v2/screens/entry/login.dart';
+import 'package:sakay_v2/screens/start/home.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,6 +15,7 @@ class App extends StatefulWidget {
 class _AppState extends State<App> {
   String? objectId;
   String? sessionToken;
+  bool? isLoggedIn;
 
   Future<void> _getUserType() async {
     var prefs = await SharedPreferences.getInstance();
@@ -21,6 +23,7 @@ class _AppState extends State<App> {
     setState(() {
       objectId = prefs.getString('objectId');
       sessionToken = prefs.getString('sessionToken');
+      isLoggedIn = prefs.getBool('isLoggedIn');
     });
   }
 
@@ -34,7 +37,13 @@ class _AppState extends State<App> {
     if (objectId == null && sessionToken == null) {
       return const Login();
     } else {
-      return const Index();
+      if (isLoggedIn == true) {
+        return const Index(
+          defaultIndex: 0,
+        );
+      } else {
+        return const Home();
+      }
     }
   }
 

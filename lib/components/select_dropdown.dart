@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sakay_v2/models/id_type.dart';
+import 'package:sakay_v2/models/dropdown_items.dart';
 
 class SelectDropdown extends StatefulWidget {
   const SelectDropdown({
@@ -8,12 +8,14 @@ class SelectDropdown extends StatefulWidget {
     required this.icon,
     required this.itemOptions,
     required this.callback,
+    required this.defaultValue,
   });
 
   final String label;
   final Icon? icon;
   final List<dynamic> itemOptions;
-  final Function(CustomDropdownItems? value) callback;
+  final DropdownItems? defaultValue;
+  final Function(DropdownItems? value) callback;
 
   @override
   State<SelectDropdown> createState() => _SelectDropdownState();
@@ -22,7 +24,7 @@ class SelectDropdown extends StatefulWidget {
 class _SelectDropdownState extends State<SelectDropdown> {
   String? value;
 
-  DropdownMenuItem<CustomDropdownItems> buildMenuItem(item) => DropdownMenuItem(
+  DropdownMenuItem<DropdownItems> buildMenuItem(item) => DropdownMenuItem(
         value: item,
         child: Text(item.name),
       );
@@ -36,6 +38,7 @@ class _SelectDropdownState extends State<SelectDropdown> {
         child: DropdownButtonFormField(
           isExpanded: true,
           items: widget.itemOptions.map(buildMenuItem).toList(),
+          value: widget.defaultValue,
           onChanged: widget.callback,
           decoration: InputDecoration(
             labelText: widget.label,

@@ -41,7 +41,9 @@ class _LoginState extends State<Login> {
       await prefs.setString('mobileNumber', mobileNumberController.text);
       await prefs.setString('objectId', loggedInUser['objectId']);
       await prefs.setString('sessionToken', loggedInUser['sessionToken']);
-      navigator.push(buildRoute(const Index()));
+      navigator.push(buildRoute(const Index(
+        defaultIndex: 0,
+      )));
     } else {
       setState(() {
         apiErrorMessage = response.error!.message;

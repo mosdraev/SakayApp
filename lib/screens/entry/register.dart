@@ -92,7 +92,9 @@ class _RegisterState extends State<Register> {
                             await prefs.setString(
                                 'userType', userType.toString());
 
-                            navigator.push(buildRoute(const Index()));
+                            navigator.push(buildRoute(const Index(
+                              defaultIndex: 0,
+                            )));
                           } else {
                             WidgetsBinding.instance.addPostFrameCallback(
                                 (_) => showAlertDialog(context));
