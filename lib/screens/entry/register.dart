@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk.dart';
 import 'package:sakay_v2/components/main_layout.dart';
-import 'package:sakay_v2/screens/dashboard/index.dart';
 import 'package:sakay_v2/screens/entry/login.dart';
+import 'package:sakay_v2/static/constant.dart';
 import 'package:sakay_v2/static/route.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Register extends StatefulWidget {
-  const Register({super.key, required this.type, required this.label});
+  const Register({super.key});
 
-  final int type;
-  final String label;
+  // final int type;
+  // final String label;
 
   @override
   State<Register> createState() => _RegisterState();
@@ -26,6 +26,7 @@ class _RegisterState extends State<Register> {
 
   bool _showPassword = true;
   bool _showConfirmPassword = true;
+  bool _formSubmitted = false;
 
   void _togglePasswordObscured() {
     setState(() {
@@ -39,11 +40,30 @@ class _RegisterState extends State<Register> {
     });
   }
 
+  void registerUser(navigator) async {
+    final username = mobileNumberController.text;
+    final password = passwordController.text;
+
+    ParseUser userObject = ParseUser.createUser(username, password);
+    var response = await userObject.signUp(allowWithoutEmail: true);
+
+    if (response.success) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+          Constant.userMobileNumber, mobileNumberController.text);
+      navigator.push(buildRoute(const Login()));
+    } else {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => showAlertDialog(context));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MainLayout(
       floatingActionButton: null,
       bottomNavigationBar: null,
+      showBackButton: false,
       title: "Register User",
       widget: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -64,51 +84,39 @@ class _RegisterState extends State<Register> {
                   children: [
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        elevation: 15,
+                        elevation: 5,
                         padding: const EdgeInsets.symmetric(
                             vertical: 10, horizontal: 20),
                         minimumSize: const Size(30, 10),
-                        // fixedSize: const Size.fromWidth(150),
                         backgroundColor: buttonBackgroundColor,
                       ),
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          var navigator = Navigator.of(context),
-                              userObject = ParseUser.createUser(
-                                  mobileNumberController.text,
-                                  passwordController.text),
-                              response = await userObject.signUp(
-                                  allowWithoutEmail: true);
-
-                          if (response.success) {
-                            final prefs = await SharedPreferences.getInstance();
-
-                            var userType = {
-                              "mobileNumber": mobileNumberController.text,
-                              "type": widget.type
-                            };
-
-                            // set value
-                            await prefs.setString(
-                                'userType', userType.toString());
-
-                            navigator.push(buildRoute(const Index(
-                              defaultIndex: 0,
-                            )));
-                          } else {
-                            WidgetsBinding.instance.addPostFrameCallback(
-                                (_) => showAlertDialog(context));
-                          }
+                          setState(() {
+                            _formSubmitted = true;
+                          });
+                          var navigator = Navigator.of(context);
+                          registerUser(navigator);
                         }
                       },
-                      child: const Text(
-                        'Create Account',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                      child: _formSubmitted
+                          ? Container(
+                              width: 24,
+                              height: 24,
+                              padding: const EdgeInsets.all(2.0),
+                              child: const CircularProgressIndicator(
+                                color: Color.fromARGB(255, 235, 236, 235),
+                                strokeWidth: 3,
+                              ),
+                            )
+                          : const Text(
+                              'Create Account',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                     ),
                   ],
                 ),
@@ -313,7 +321,18 @@ class MobileNumberField extends StatelessWidget {
             borderRadius: BorderRadius.circular(5.0),
           ),
           border: const OutlineInputBorder(),
-          prefixText: '+63',
+          prefixIcon: const Padding(
+            padding: EdgeInsets.fromLTRB(14.0, 14.0, 8.0, 8.0),
+            child: Text(
+              '+63',
+              style: TextStyle(
+                fontFamily: defaultFont,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black54,
+              ),
+            ),
+          ),
           labelText: 'Mobile Number',
           counterText: '',
         ),

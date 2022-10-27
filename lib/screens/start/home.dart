@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sakay_v2/components/main_layout.dart';
-import 'package:sakay_v2/screens/start/select_user.dart';
+import 'package:sakay_v2/screens/entry/register.dart';
 import 'package:sakay_v2/static/route.dart';
 import 'package:sakay_v2/static/style.dart';
 
@@ -51,7 +51,7 @@ class StartButton extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(60, 20, 60, 20),
         child: ElevatedButton(
           onPressed: () => {
-            Navigator.of(context).push(buildRoute(const SelectUser())),
+            Navigator.of(context).push(buildRoute(const Register())),
           },
           style: ElevatedButton.styleFrom(
             elevation: 15,

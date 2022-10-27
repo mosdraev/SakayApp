@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:async/async.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk.dart';
@@ -9,6 +10,7 @@ import 'package:sakay_v2/components/main_layout.dart';
 import 'package:sakay_v2/models/dropdown_items.dart';
 import 'package:sakay_v2/models/profile_data.dart';
 import 'package:sakay_v2/screens/dashboard/index.dart';
+import 'package:sakay_v2/static/constant.dart';
 import 'package:sakay_v2/static/route.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,30 +24,46 @@ class Update extends StatefulWidget {
 
 class _UpdateState extends State<Update> {
   String? objectId;
-  ProfileData? profileData;
+  Future<dynamic>? futureData;
+
+  int accountType = Constant.accountPassenger;
+
+  bool formSubmitted = false;
+
+  final AsyncMemoizer _memoizer = AsyncMemoizer();
+
   @override
   void initState() {
     super.initState();
-    _getUserObjectId();
   }
 
-  Future<void> _getUserObjectId() async {
-    var prefs = await SharedPreferences.getInstance();
+  TextEditingController firstnameController = TextEditingController();
+  TextEditingController lastnameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
 
-    setState(() {
-      objectId = prefs.getString('objectId');
+  Future<dynamic> getUserProfileData() {
+    return _memoizer.runOnce(() async {
+      var prefs = await SharedPreferences.getInstance();
+      objectId = prefs.getString(Constant.userObjectId);
+
+      if (objectId != null) {
+        futureData = Service.getUserProfile(objectId);
+      }
+
+      return futureData;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     NavigatorState navContext = Navigator.of(context);
+
     return MainLayout(
       title: 'Update Profile',
       floatingActionButton: null,
       bottomNavigationBar: null,
       widget: FutureBuilder(
-        future: Service.getUserProfile(objectId),
+        future: getUserProfileData(),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.waiting:
@@ -54,11 +72,10 @@ class _UpdateState extends State<Update> {
               );
             default:
               if (snapshot.hasError) {
-                return const Text('Show default page');
+                return const Text('Failed to connect to server');
               } else {
-                final Object? userProfileData;
                 if (snapshot.hasData) {
-                  userProfileData = snapshot.data;
+                  Object? userProfileData = snapshot.data;
                   return buildUpdateForm(navContext, userProfileData);
                 } else {
                   return buildForm(navContext);
@@ -79,20 +96,31 @@ class _UpdateState extends State<Update> {
 
     final formKey = GlobalKey<FormState>();
 
-    TextEditingController firstnameController =
-        TextEditingController(text: data.firstName);
+    // TextEditingController firstnameController =
+    //     TextEditingController(text: data.firstName);
 
-    TextEditingController lastnameController =
-        TextEditingController(text: data.lastName);
+    // TextEditingController lastnameController =
+    //     TextEditingController(text: data.lastName);
 
-    TextEditingController emailController =
-        TextEditingController(text: data.email);
+    // TextEditingController emailController =
+    //     TextEditingController(text: data.email);
 
-    List<DropdownItems> idTypes = <DropdownItems>[
-      const DropdownItems(100, 'SSS'),
-      const DropdownItems(200, 'Drivers License'),
-      const DropdownItems(300, 'UMID'),
-    ];
+    firstnameController.text = data.firstName;
+    lastnameController.text = data.lastName;
+    emailController.text = data.email;
+
+    List<DropdownItems> idTypes;
+    if (data.accountType == Constant.accountDriver) {
+      idTypes = <DropdownItems>[
+        const DropdownItems(200, 'Drivers License'),
+      ];
+    } else {
+      idTypes = <DropdownItems>[
+        const DropdownItems(100, 'SSS'),
+        const DropdownItems(200, 'Drivers License'),
+        const DropdownItems(300, 'UMID'),
+      ];
+    }
 
     DropdownMenuItem<DropdownItems> buildMenuItem(DropdownItems item) =>
         DropdownMenuItem(
@@ -301,15 +329,32 @@ class _UpdateState extends State<Update> {
                   minimumSize: const Size(30, 10),
                   backgroundColor: buttonBackgroundColor,
                 ),
-                onPressed: updateProfile,
-                child: const Text(
-                  'Save Profile',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    setState(() {
+                      formSubmitted = true;
+                    });
+                    updateProfile();
+                  }
+                },
+                child: formSubmitted
+                    ? Container(
+                        width: 24,
+                        height: 24,
+                        padding: const EdgeInsets.all(2.0),
+                        child: const CircularProgressIndicator(
+                          color: Color.fromARGB(255, 235, 236, 235),
+                          strokeWidth: 3,
+                        ),
+                      )
+                    : const Text(
+                        'Save Profile',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -325,14 +370,14 @@ class _UpdateState extends State<Update> {
     String? frontImageBase64;
     String? backImageBase64;
 
-    TextEditingController firstnameController = TextEditingController();
-    TextEditingController lastnameController = TextEditingController();
-    TextEditingController emailController = TextEditingController();
-
     List<DropdownItems> idTypes = <DropdownItems>[
       const DropdownItems(100, 'SSS'),
       const DropdownItems(200, 'Drivers License'),
       const DropdownItems(300, 'UMID'),
+    ];
+
+    List<DropdownItems> driverType = <DropdownItems>[
+      const DropdownItems(200, 'Drivers License'),
     ];
 
     DropdownMenuItem<DropdownItems> buildMenuItem(DropdownItems item) =>
@@ -363,9 +408,13 @@ class _UpdateState extends State<Update> {
       profile.set('firstName', firstnameController.text.trim());
       profile.set('lastName', lastnameController.text.trim());
       profile.set('email', emailController.text.trim());
+      if (accountType == Constant.accountDriver) {
+        idType = 200;
+      }
       profile.set('idType', idType);
       profile.set('idFrontImage', frontImageBase64);
       profile.set('idBackImage', backImageBase64);
+      profile.set('accountType', accountType);
 
       var response = await profile.save();
 
@@ -383,14 +432,26 @@ class _UpdateState extends State<Update> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(0, 15, 0, 5),
+                child: Text(
+                  'Set up your profile',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontFamily: defaultFont,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: TextFormField(
                 validator: (value) {
-                  if (value!.isEmpty) {
-                    return "Please enter your firstname.";
-                  }
-                  return null;
+                  return (value!.isEmpty)
+                      ? "Please enter your firstname."
+                      : null;
                 },
                 controller: firstnameController,
                 decoration: InputDecoration(
@@ -411,10 +472,9 @@ class _UpdateState extends State<Update> {
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: TextFormField(
                 validator: (value) {
-                  if (value!.isEmpty) {
-                    return "Please enter your lastname.";
-                  }
-                  return null;
+                  return (value!.isEmpty)
+                      ? "Please enter your lastname."
+                      : null;
                 },
                 controller: lastnameController,
                 decoration: InputDecoration(
@@ -436,10 +496,7 @@ class _UpdateState extends State<Update> {
               child: TextFormField(
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value!.isEmpty) {
-                    return "Please enter your email.";
-                  }
-                  return null;
+                  return (value!.isEmpty) ? "Please enter your email." : null;
                 },
                 controller: emailController,
                 decoration: InputDecoration(
@@ -457,11 +514,84 @@ class _UpdateState extends State<Update> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+              child: TextButton.icon(
+                label: Tooltip(
+                  showDuration: const Duration(seconds: 10),
+                  triggerMode: TooltipTriggerMode.tap,
+                  message:
+                      'You can only select account type once, There can\nonly be one account type per mobile number registered.',
+                  child: Ink(
+                    height: 20,
+                    width: 20,
+                    decoration: const ShapeDecoration(
+                        shape: CircleBorder(), color: Colors.black26),
+                    child: const Icon(
+                      Icons.question_mark_outlined,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                icon: const Text(
+                  'Select Account Type',
+                  style: TextStyle(
+                    fontFamily: defaultFont,
+                    fontSize: 16,
+                    color: Colors.black54,
+                  ),
+                ),
+                onPressed: () {},
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Expanded(
+                    child: RadioListTile<int>(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 5),
+                      activeColor: buttonBackgroundColor,
+                      selectedTileColor: buttonBackgroundColor,
+                      title: const Text('Driver'),
+                      value: Constant.accountDriver,
+                      groupValue: accountType,
+                      onChanged: (value) => setState(() {
+                        accountType = value!;
+                      }),
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<int>(
+                      selectedTileColor: buttonBackgroundColor,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 5),
+                      activeColor: buttonBackgroundColor,
+                      title: const Text('Passenger'),
+                      value: Constant.accountPassenger,
+                      groupValue: accountType,
+                      onChanged: (value) => setState(() {
+                        accountType = value!;
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               child: DropdownButtonHideUnderline(
                 child: DropdownButtonFormField(
+                  validator: (value) {
+                    return (value == null) ? "Please select an id type." : null;
+                  },
                   isExpanded: true,
-                  items: idTypes.map(buildMenuItem).toList(),
+                  value: accountType == Constant.accountDriver
+                      ? idTypes.where((type) => type.id == 200).single
+                      : null,
+                  items: accountType == Constant.accountDriver
+                      ? driverType.map(buildMenuItem).toList()
+                      : idTypes.map(buildMenuItem).toList(),
                   onChanged: (value) {
                     idType = value?.id;
                   },
@@ -521,9 +651,6 @@ class _UpdateState extends State<Update> {
                 ),
               ),
             ),
-            const SizedBox(
-              height: 50,
-            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 10),
               child: ElevatedButton(
@@ -533,15 +660,32 @@ class _UpdateState extends State<Update> {
                   minimumSize: const Size(30, 10),
                   backgroundColor: buttonBackgroundColor,
                 ),
-                onPressed: saveProfile,
-                child: const Text(
-                  'Save Profile',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    setState(() {
+                      formSubmitted = true;
+                    });
+                    saveProfile();
+                  }
+                },
+                child: formSubmitted
+                    ? Container(
+                        width: 24,
+                        height: 24,
+                        padding: const EdgeInsets.all(2.0),
+                        child: const CircularProgressIndicator(
+                          color: Color.fromARGB(255, 235, 236, 235),
+                          strokeWidth: 3,
+                        ),
+                      )
+                    : const Text(
+                        'Save Profile',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
               ),
             ),
           ],

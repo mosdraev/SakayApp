@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:sakay_v2/api/service.dart';
 import 'package:sakay_v2/models/profile_data.dart';
+import 'package:sakay_v2/screens/entry/login.dart';
 import 'package:sakay_v2/screens/profile/change_password.dart';
 import 'package:sakay_v2/screens/profile/update.dart';
+import 'package:sakay_v2/static/constant.dart';
 import 'package:sakay_v2/static/route.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,24 +20,35 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  String? objectId;
+  String? userObjectId;
 
   @override
   void initState() {
     super.initState();
-    _getUserObjectId();
+    getUserObjectId();
   }
 
-  Future<void> _getUserObjectId() async {
+  Future<void> getUserObjectId() async {
     var prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      objectId = prefs.getString('objectId');
+      userObjectId = prefs.getString(Constant.userObjectId);
     });
+  }
+
+  logOutUser(navigatorContext) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(Constant.userIsLoggedIn, false);
+
+    navigatorContext.push(buildRoute(
+      const Login(),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
+    var navigatorContext = Navigator.of(context);
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -51,7 +64,7 @@ class _SettingsState extends State<Settings> {
           ),
         ),
         FutureBuilder(
-          future: Service.getUserProfile(objectId),
+          future: Service.getUserProfile(userObjectId),
           builder: (context, snapshot) {
             switch (snapshot.connectionState) {
               case ConnectionState.waiting:
@@ -60,14 +73,14 @@ class _SettingsState extends State<Settings> {
                 );
               default:
                 if (snapshot.hasError) {
-                  return const Text('');
+                  return const Text('Failed to connect to server');
                 } else {
                   final Object? userProfileData;
                   if (snapshot.hasData) {
                     userProfileData = snapshot.data;
                     return buildProfileData(userProfileData);
                   } else {
-                    return const Text('');
+                    return buildProfilePlaceholder();
                   }
                 }
             }
@@ -126,7 +139,9 @@ class _SettingsState extends State<Settings> {
               minimumSize: const Size(30, 10),
               backgroundColor: Colors.white,
             ),
-            onPressed: () => {},
+            onPressed: () {
+              logOutUser(navigatorContext);
+            },
             child: const Text(
               'Logout',
               style: TextStyle(
@@ -157,6 +172,54 @@ class _SettingsState extends State<Settings> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget buildProfilePlaceholder() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        CircleAvatar(
+          backgroundColor: const Color(0xff9EB86D),
+          radius: 40,
+          child: CircleAvatar(
+            backgroundColor: Colors.cyan[100],
+            backgroundImage: const NetworkImage(
+                'https://www.gravatar.com/avatar/default?d=identicon'),
+            radius: 39,
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              child: Text(
+                'Name: ------------------',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontFamily: defaultFont,
+                  color: Colors.black54,
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              child: Text(
+                'Email: ------------------',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontFamily: defaultFont,
+                  color: Colors.black54,
+                ),
+              ),
+            ),
+          ],
+        ),
+        // const SizedBox(
+        //   width: 180,
+        // )
       ],
     );
   }

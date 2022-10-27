@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sakay_v2/components/button_primary.dart';
+import 'package:sakay_v2/static/constant.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:sakay_v2/components/main_layout.dart';
 
@@ -29,7 +30,7 @@ class SelectUser extends StatelessWidget {
               children: const [
                 ButtonPrimary(
                   labelText: 'Driver',
-                  userType: 1000,
+                  userType: Constant.accountDriver,
                   icon: Icon(
                     Icons.drive_eta_rounded,
                     size: 32,
@@ -37,7 +38,7 @@ class SelectUser extends StatelessWidget {
                 ),
                 ButtonPrimary(
                   labelText: 'Passenger',
-                  userType: 2000,
+                  userType: Constant.accountPassenger,
                   icon: Icon(
                     Icons.emoji_people,
                     size: 32,

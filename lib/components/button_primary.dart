@@ -46,7 +46,7 @@ class ButtonPrimary extends StatelessWidget {
         onPressed: () async {
           await Navigator.of(context).push(
             buildRoute(
-              Register(type: userType, label: labelText),
+              const Register(),
             ),
           );
         },

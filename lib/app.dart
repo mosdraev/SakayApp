@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sakay_v2/screens/dashboard/index.dart';
 import 'package:sakay_v2/screens/entry/login.dart';
 import 'package:sakay_v2/screens/start/home.dart';
+import 'package:sakay_v2/static/constant.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,36 +16,36 @@ class App extends StatefulWidget {
 class _AppState extends State<App> {
   String? objectId;
   String? sessionToken;
+
   bool? isLoggedIn;
-
-  Future<void> _getUserType() async {
-    var prefs = await SharedPreferences.getInstance();
-
-    setState(() {
-      objectId = prefs.getString('objectId');
-      sessionToken = prefs.getString('sessionToken');
-      isLoggedIn = prefs.getBool('isLoggedIn');
-    });
-  }
 
   @override
   void initState() {
     super.initState();
-    _getUserType();
+    getUserType();
+  }
+
+  Future<void> getUserType() async {
+    var prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      objectId = prefs.getString(Constant.userObjectId);
+      sessionToken = prefs.getString(Constant.userSessionToken);
+      isLoggedIn = prefs.getBool(Constant.userIsLoggedIn);
+    });
   }
 
   Widget showScreen() {
+    Widget screen;
+
     if (objectId == null && sessionToken == null) {
-      return const Login();
+      screen = const Home();
     } else {
-      if (isLoggedIn == true) {
-        return const Index(
-          defaultIndex: 0,
-        );
-      } else {
-        return const Home();
-      }
+      screen =
+          (isLoggedIn == true) ? const Index(defaultIndex: 0) : const Login();
     }
+
+    return screen;
   }
 
   @override
