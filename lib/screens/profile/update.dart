@@ -13,14 +13,14 @@ import 'package:sakay_v2/static/route.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class Updates extends StatefulWidget {
-  const Updates({super.key});
+class Update extends StatefulWidget {
+  const Update({super.key});
 
   @override
-  State<Updates> createState() => _UpdatesState();
+  State<Update> createState() => _UpdateState();
 }
 
-class _UpdatesState extends State<Updates> {
+class _UpdateState extends State<Update> {
   String? objectId;
   ProfileData? profileData;
   @override
@@ -117,28 +117,30 @@ class _UpdatesState extends State<Updates> {
     }
 
     updateProfile() async {
-      var profile = ParseObject('Profile');
-      profile.set('objectId', originProfileData['objectId']);
-      profile.set('userObjectId', objectId);
-      profile.set('firstName', firstnameController.text.trim());
-      profile.set('lastName', lastnameController.text.trim());
-      profile.set('email', emailController.text.trim());
+      if (objectId == originProfileData['userObjectId']) {
+        var profile = ParseObject('Profile');
+        profile.set('objectId', originProfileData['objectId']);
+        profile.set('userObjectId', objectId);
+        profile.set('firstName', firstnameController.text.trim());
+        profile.set('lastName', lastnameController.text.trim());
+        profile.set('email', emailController.text.trim());
 
-      if (idType != null) {
-        profile.set('idType', idType);
-      }
-      if (frontImageBase64 != null) {
-        profile.set('idFrontImage', frontImageBase64);
-      }
-      if (backImageBase64 != null) {
-        profile.set('idBackImage', backImageBase64);
-      }
+        if (idType != null) {
+          profile.set('idType', idType);
+        }
+        if (frontImageBase64 != null) {
+          profile.set('idFrontImage', frontImageBase64);
+        }
+        if (backImageBase64 != null) {
+          profile.set('idBackImage', backImageBase64);
+        }
 
-      var response = await profile.update();
-      if (response.success) {
-        navContext.push(buildRoute(const Index(
-          defaultIndex: 2,
-        )));
+        var response = await profile.update();
+        if (response.success) {
+          navContext.push(buildRoute(const Index(
+            defaultIndex: 2,
+          )));
+        }
       }
     }
 

@@ -26,6 +26,8 @@ dependencies:
   flutter_map: ^3.0.0
   latlong2: ^0.8.1
   sliding_up_panel: ^2.0.0+1
+  crypto: ^3.0.2
+  geolocator: ^9.0.2
 
 dev_dependencies:
   flutter_test:

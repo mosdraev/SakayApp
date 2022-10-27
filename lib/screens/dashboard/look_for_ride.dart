@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sakay_v2/screens/setup_ride/prepare_a_ride.dart';
+import 'package:sakay_v2/screens/setup_ride/book_ride.dart';
 import 'package:sakay_v2/static/route.dart';
 import 'package:sakay_v2/static/style.dart';
 
@@ -10,7 +10,8 @@ class LookForRide extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton.extended(
       onPressed: () {
-        Navigator.of(context).push(buildRoute(const PrepareRide()));
+        Navigator.of(context).push(buildRoute(const BookRide()));
+        // Navigator.of(context).push(buildRoute(const PrepareRide()));
       },
       label: const Text(
         "Look for a ride",
