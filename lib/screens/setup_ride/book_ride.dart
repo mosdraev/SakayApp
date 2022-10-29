@@ -1,11 +1,16 @@
+import 'dart:convert';
+
+import 'package:async/async.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk.dart';
+import 'package:sakay_v2/api/service.dart';
 import 'package:sakay_v2/components/main_layout.dart';
 import 'package:sakay_v2/models/dropdown_items.dart';
 import 'package:sakay_v2/screens/dashboard/index.dart';
+import 'package:sakay_v2/static/constant.dart';
 import 'package:sakay_v2/static/route.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,11 +24,12 @@ class BookRide extends StatefulWidget {
 }
 
 class _BookRideState extends State<BookRide> {
-  late Future<Position> deviceLocation;
-  int? selectedPreviousPlace;
-  int? selectedDriver;
-
+  String? selectedDriver;
+  String? errorMessage;
   String? userObjectId;
+
+  bool _formSubmitted = false;
+  final _formKey = GlobalKey<FormState>();
 
   TextEditingController currentLocationController = TextEditingController();
   TextEditingController destinationLocationController = TextEditingController();
@@ -31,7 +37,6 @@ class _BookRideState extends State<BookRide> {
   @override
   void initState() {
     super.initState();
-    getDeviceLocation();
     getUserObjectId();
   }
 
@@ -39,12 +44,22 @@ class _BookRideState extends State<BookRide> {
     var prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      userObjectId = prefs.getString('objectId');
+      userObjectId = prefs.getString(Constant.userObjectId);
     });
   }
 
-  void getDeviceLocation() {
-    deviceLocation = _determinePosition();
+  final AsyncMemoizer _memoizer = AsyncMemoizer();
+
+  _futureData() async {
+    return _memoizer.runOnce(() async {
+      var drivers = await getDriverUsers();
+      var deviceLocation = await _determinePosition();
+
+      return {
+        'drivers': drivers,
+        'deviceLocation': deviceLocation,
+      };
+    });
   }
 
   Future<Position> _determinePosition() async {
@@ -70,7 +85,18 @@ class _BookRideState extends State<BookRide> {
     }
 
     return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.bestForNavigation);
+        desiredAccuracy: LocationAccuracy.high);
+  }
+
+  getDriverUsers() async {
+    var data = await Service.getDrivers();
+    List<DropdownItems> selectDrivers = <DropdownItems>[];
+    for (var dataUser in data) {
+      selectDrivers.add(DropdownItems(dataUser['userObjectId'],
+          '${dataUser['firstName']}  ${dataUser['lastName']}'));
+    }
+
+    return selectDrivers;
   }
 
   @override
@@ -82,8 +108,9 @@ class _BookRideState extends State<BookRide> {
       widget: Container(
         decoration: const BoxDecoration(color: Colors.white70),
         child: SlidingUpPanel(
+          maxHeight: 350,
           panel: FutureBuilder(
-            future: deviceLocation,
+            future: _futureData(),
             builder: (context, snapshot) {
               switch (snapshot.connectionState) {
                 case ConnectionState.waiting:
@@ -103,7 +130,7 @@ class _BookRideState extends State<BookRide> {
             },
           ),
           body: FutureBuilder(
-            future: deviceLocation,
+            future: _futureData(),
             builder: (context, snapshot) {
               switch (snapshot.connectionState) {
                 case ConnectionState.waiting:
@@ -130,10 +157,11 @@ class _BookRideState extends State<BookRide> {
   }
 
   Widget buildMap(navigatorContext, data) {
+    var location = data['deviceLocation'];
     List<Marker> markers = [];
 
     markers.add(Marker(
-      point: LatLng(data.latitude, data.longitude),
+      point: LatLng(location.latitude, location.longitude),
       width: 30,
       height: 30,
       builder: (context) => IconButton(
@@ -166,13 +194,16 @@ class _BookRideState extends State<BookRide> {
     return FlutterMap(
       // mapController: mapController,
       options: MapOptions(
-        center:
-            LatLng(data.latitude, data.longitude), // Defaults to Alaminos City
+        center: LatLng(
+            location.latitude, location.longitude), // Defaults to Alaminos City
         zoom: 12,
         maxZoom: 18,
         onLongPress: (tapPosition, point) {
           placeMarker(point);
-          destinationLocationController.text = point.toString();
+          destinationLocationController.text = json.encode({
+            "latitude": point.latitude,
+            "longitude": point.longitude,
+          });
         },
         // keepAlive: true,
       ),
@@ -193,21 +224,14 @@ class _BookRideState extends State<BookRide> {
   }
 
   Widget buildForm(navigatorContext, data) {
-    LatLng devicePointer = LatLng(data.latitude, data.longitude);
+    List<DropdownItems> drivers = data['drivers'];
+    Position location = data['deviceLocation'];
+    LatLng devicePointer = LatLng(location.latitude, location.longitude);
 
-    currentLocationController.text = devicePointer.toString();
-
-    List<DropdownItems> selectRiders = <DropdownItems>[
-      const DropdownItems(100, 'Driver 1'),
-      const DropdownItems(200, 'Driver 2'),
-      const DropdownItems(300, 'Driver 3'),
-    ];
-
-    List<DropdownItems> selectPlaces = <DropdownItems>[
-      const DropdownItems(100, 'Place 1'),
-      const DropdownItems(200, 'Place 2'),
-      const DropdownItems(300, 'Place 3'),
-    ];
+    currentLocationController.text = json.encode({
+      "latitude": devicePointer.latitude,
+      "longitude": devicePointer.longitude
+    });
 
     DropdownMenuItem<DropdownItems> buildMenuItem(DropdownItems item) =>
         DropdownMenuItem(
@@ -215,33 +239,24 @@ class _BookRideState extends State<BookRide> {
           child: Text(item.name),
         );
 
-    void confirmBooking() async {
+    confirmBooking() async {
       // print(selectedPreviousPlace);
       // print(selectedDriver);
       // print(currentLocationController.text);
-      // print(destinationLocationController.text);
+      // print(destinationLocationController.value);
       // print(userObjectId);
 
-      if (selectedPreviousPlace != null) {
-        destinationLocationController.text = selectPlaces
-            .where((type) => type.id == selectedPreviousPlace)
-            .single
-            .name;
-      }
-
+      // return;
       ParseObject place = ParseObject('Place');
       place.set('userObjectId', userObjectId);
-      place.set('currentLocation', currentLocationController.text.trim());
+      place.set('currentLocation', currentLocationController.text);
       place.set(
         'destinationLocation',
-        destinationLocationController.text.trim(),
+        destinationLocationController.text,
       );
-      place.set('driverUserObjectId', selectedDriver.toString());
+      place.set('driverUserObjectId', selectedDriver);
 
       var response = await place.save();
-
-      print(response.success);
-      print(response.statusCode);
 
       if (response.success) {
         navigatorContext.push(buildRoute(const Index(
@@ -250,137 +265,141 @@ class _BookRideState extends State<BookRide> {
       }
     }
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          child: TextFormField(
-            readOnly: true,
-            controller: currentLocationController,
-            decoration: InputDecoration(
-              prefixIcon: const Icon(
-                Icons.arrow_downward_outlined,
-                color: Colors.black26,
-              ),
-              floatingLabelStyle: const TextStyle(
-                color: Color.fromARGB(255, 130, 157, 72),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(
-                  color: Color.fromARGB(255, 130, 157, 72),
-                  width: 2.0,
+    return SingleChildScrollView(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 20, 8, 10),
+              child: TextFormField(
+                readOnly: true,
+                controller: currentLocationController,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(
+                    Icons.arrow_downward_outlined,
+                    color: Colors.black26,
+                  ),
+                  floatingLabelStyle: const TextStyle(
+                    color: Color.fromARGB(255, 130, 157, 72),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                      color: Color.fromARGB(255, 130, 157, 72),
+                      width: 2.0,
+                    ),
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  border: const OutlineInputBorder(),
+                  labelText: 'Current Location',
                 ),
-                borderRadius: BorderRadius.circular(5.0),
               ),
-              border: const OutlineInputBorder(),
-              labelText: 'Current Location',
             ),
-          ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 10, 8, 0),
+              child: TextFormField(
+                readOnly: true,
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return "Please select a destination from the map.";
+                  }
+                  return null;
+                },
+                controller: destinationLocationController,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(
+                    Icons.arrow_forward,
+                    color: Colors.black26,
+                  ),
+                  floatingLabelStyle: const TextStyle(
+                    color: Color.fromARGB(255, 130, 157, 72),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                        color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  border: const OutlineInputBorder(),
+                  labelText: 'Destination',
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(15, 0, 15, 6),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButtonFormField(
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select a designated driver.';
+                    }
+                    return null;
+                  },
+                  isExpanded: true,
+                  items: drivers.map(buildMenuItem).toList(),
+                  onChanged: (value) {
+                    selectedDriver = value?.id;
+                  },
+                  decoration: InputDecoration(
+                    icon: const Icon(
+                      Icons.drive_eta_outlined,
+                      color: Colors.black26,
+                    ),
+                    labelText: 'Select Drivers',
+                    floatingLabelStyle: const TextStyle(
+                      color: Color.fromARGB(255, 130, 157, 72),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                    border: const UnderlineInputBorder(),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 15,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  backgroundColor: buttonBackgroundColor,
+                ),
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    setState(() {
+                      _formSubmitted = true;
+                    });
+                    confirmBooking();
+                  }
+                },
+                child: _formSubmitted
+                    ? Container(
+                        width: 24,
+                        height: 24,
+                        padding: const EdgeInsets.all(2.0),
+                        child: const CircularProgressIndicator(
+                          color: Color.fromARGB(255, 235, 236, 235),
+                          strokeWidth: 3,
+                        ),
+                      )
+                    : const Text(
+                        'Confirm Booking',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+              ),
+            ),
+            // const SizedBox(height: 60),
+          ],
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          child: TextFormField(
-            controller: destinationLocationController,
-            decoration: InputDecoration(
-              prefixIcon: const Icon(
-                Icons.arrow_forward,
-                color: Colors.black26,
-              ),
-              floatingLabelStyle: const TextStyle(
-                color: Color.fromARGB(255, 130, 157, 72),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(
-                    color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
-                borderRadius: BorderRadius.circular(5.0),
-              ),
-              border: const OutlineInputBorder(),
-              labelText: 'Destination',
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButtonFormField(
-              isExpanded: true,
-              items: selectPlaces.map(buildMenuItem).toList(),
-              onChanged: (value) {
-                selectedPreviousPlace = value?.id;
-              },
-              decoration: InputDecoration(
-                icon: const Icon(
-                  Icons.place_outlined,
-                  color: Colors.black26,
-                ),
-                labelText: 'Select Previous Destinations',
-                floatingLabelStyle: const TextStyle(
-                  color: Color.fromARGB(255, 130, 157, 72),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: const BorderSide(
-                      color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
-                  borderRadius: BorderRadius.circular(5.0),
-                ),
-                border: const UnderlineInputBorder(),
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButtonFormField(
-              isExpanded: true,
-              items: selectRiders.map(buildMenuItem).toList(),
-              onChanged: (value) {
-                selectedDriver = value?.id;
-              },
-              decoration: InputDecoration(
-                icon: const Icon(
-                  Icons.drive_eta_outlined,
-                  color: Colors.black26,
-                ),
-                labelText: 'Select Drivers',
-                floatingLabelStyle: const TextStyle(
-                  color: Color.fromARGB(255, 130, 157, 72),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: const BorderSide(
-                      color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
-                  borderRadius: BorderRadius.circular(5.0),
-                ),
-                border: const UnderlineInputBorder(),
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              elevation: 15,
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              backgroundColor: buttonBackgroundColor,
-            ),
-            onPressed: () {
-              confirmBooking();
-            },
-            child: const Text(
-              'Confirm Booking',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 60),
-      ],
+      ),
     );
   }
 }
