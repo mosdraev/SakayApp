@@ -99,6 +99,62 @@ class _BookRideState extends State<BookRide> {
     return selectDrivers;
   }
 
+  Future alertDialog(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          icon: const Icon(
+            Icons.check_circle,
+            color: buttonBackgroundColor,
+            size: 60,
+          ),
+          title: const Text(
+            'Success!',
+            style: TextStyle(
+              fontFamily: defaultFont,
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: const Text('Booking added successfully.'),
+          actions: <Widget>[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: const StadiumBorder(),
+                  // elevation: 15,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  backgroundColor: buttonBackgroundColor,
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 18.0),
+                  child: Text(
+                    'Back to Places',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: defaultFont,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+                onPressed: () {
+                  // Navigator.pop(context);
+                  Navigator.of(context).push(buildRoute(const Index(
+                    defaultIndex: 0,
+                  )));
+                },
+              ),
+            ),
+          ],
+          actionsAlignment: MainAxisAlignment.center,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     NavigatorState navigatorContext = Navigator.of(context);
@@ -245,8 +301,6 @@ class _BookRideState extends State<BookRide> {
       // print(currentLocationController.text);
       // print(destinationLocationController.value);
       // print(userObjectId);
-
-      // return;
       ParseObject place = ParseObject('Place');
       place.set('userObjectId', userObjectId);
       place.set('currentLocation', currentLocationController.text);
@@ -257,12 +311,7 @@ class _BookRideState extends State<BookRide> {
       place.set('driverUserObjectId', selectedDriver);
 
       var response = await place.save();
-
-      if (response.success) {
-        navigatorContext.push(buildRoute(const Index(
-          defaultIndex: 1,
-        )));
-      }
+      return response.success;
     }
 
     return SingleChildScrollView(
@@ -368,12 +417,20 @@ class _BookRideState extends State<BookRide> {
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   backgroundColor: buttonBackgroundColor,
                 ),
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     setState(() {
                       _formSubmitted = true;
                     });
-                    confirmBooking();
+                    var status = await confirmBooking();
+
+                    if (status == true) {
+                      // ignore: use_build_context_synchronously
+                      await alertDialog(context);
+                      setState(() {
+                        _formSubmitted = false;
+                      });
+                    }
                   }
                 },
                 child: _formSubmitted

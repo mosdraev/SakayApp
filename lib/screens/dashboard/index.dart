@@ -18,13 +18,13 @@ class _IndexState extends State<Index> {
   int selectedIndex = 0;
 
   final titles = [
-    'Home',
+    // 'Home',
     'Places',
     'Settings',
   ];
 
   final screens = [
-    const Text('Home'),
+    // const Text('Home'),
     const Places(),
     const Settings(),
   ];
@@ -42,7 +42,7 @@ class _IndexState extends State<Index> {
   @override
   Widget build(BuildContext context) {
     return MainLayout(
-      floatingActionButton: (selectedIndex == 2) ? null : const LookForRide(),
+      floatingActionButton: (selectedIndex == 1) ? null : const LookForRide(),
       showBackButton: false,
       title: titles[selectedIndex],
       widget: screens[selectedIndex],
@@ -67,19 +67,19 @@ class _IndexState extends State<Index> {
             selectedIndex = value;
           }),
           destinations: const [
-            NavigationDestination(
-              selectedIcon: Icon(
-                Icons.house,
-                color: Colors.white54,
-                size: 35,
-              ),
-              icon: Icon(
-                Icons.house_outlined,
-                color: Colors.white54,
-                size: 35,
-              ),
-              label: "Home",
-            ),
+            // NavigationDestination(
+            //   selectedIcon: Icon(
+            //     Icons.house,
+            //     color: Colors.white54,
+            //     size: 35,
+            //   ),
+            //   icon: Icon(
+            //     Icons.house_outlined,
+            //     color: Colors.white54,
+            //     size: 35,
+            //   ),
+            //   label: "Home",
+            // ),
             NavigationDestination(
               selectedIcon: Icon(
                 Icons.place,
