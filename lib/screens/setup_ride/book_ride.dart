@@ -91,12 +91,17 @@ class _BookRideState extends State<BookRide> {
   getDriverUsers() async {
     var data = await Service.getDrivers();
     List<DropdownItems> selectDrivers = <DropdownItems>[];
-    for (var dataUser in data) {
-      selectDrivers.add(DropdownItems(dataUser['userObjectId'],
-          '${dataUser['firstName']}  ${dataUser['lastName']}'));
+
+    if (data != null) {
+      for (var dataUser in data) {
+        selectDrivers.add(DropdownItems(dataUser['userObjectId'],
+            '${dataUser['firstName']}  ${dataUser['lastName']}'));
+      }
+
+      return selectDrivers;
     }
 
-    return selectDrivers;
+    return null;
   }
 
   Future alertDialog(BuildContext context) {
@@ -173,12 +178,17 @@ class _BookRideState extends State<BookRide> {
                   return const Center(child: CircularProgressIndicator());
                 default:
                   if (snapshot.hasError) {
-                    return const Text('Error loading form');
+                    return const Center(child: Text('Error loading form'));
                   } else {
                     final Object? data;
                     if (snapshot.hasData) {
                       data = snapshot.data;
-                      return buildForm(navigatorContext, data);
+                      var checkData = data as Map;
+                      if (checkData['drivers'] == null) {
+                        return const Center(child: Text('Error loading form'));
+                      } else {
+                        return buildForm(navigatorContext, data);
+                      }
                     }
                     return const Center(child: CircularProgressIndicator());
                   }
@@ -193,7 +203,7 @@ class _BookRideState extends State<BookRide> {
                   return const Center(child: CircularProgressIndicator());
                 default:
                   if (snapshot.hasError) {
-                    return const Text('Error loading map.');
+                    return const Center(child: Text('Error loading map.'));
                   } else {
                     final Object? data;
                     if (snapshot.hasData) {

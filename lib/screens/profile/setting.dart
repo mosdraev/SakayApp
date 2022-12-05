@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:parse_server_sdk_flutter/parse_server_sdk.dart';
 import 'package:sakay_v2/api/service.dart';
 import 'package:sakay_v2/models/profile_data.dart';
 import 'package:sakay_v2/screens/entry/login.dart';
-import 'package:sakay_v2/screens/profile/change_password.dart';
 import 'package:sakay_v2/screens/profile/update.dart';
 import 'package:sakay_v2/static/constant.dart';
 import 'package:sakay_v2/static/route.dart';
@@ -21,6 +21,7 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   String? userObjectId;
+  String? userToken;
 
   @override
   void initState() {
@@ -33,6 +34,7 @@ class _SettingsState extends State<Settings> {
 
     setState(() {
       userObjectId = prefs.getString(Constant.userObjectId);
+      userToken = prefs.getString(Constant.userSessionToken);
     });
   }
 
@@ -43,6 +45,32 @@ class _SettingsState extends State<Settings> {
     navigatorContext.push(buildRoute(
       const Login(),
     ));
+  }
+
+  resetPassword(context, navContext) async {
+    final prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString(Constant.userSessionToken);
+
+    ParseUser user = await Service.getUserByToken(token);
+
+    final ParseResponse parseResponse = await user.requestPasswordReset();
+    if (parseResponse.success) {
+      Message.showSuccess(
+          context: context,
+          message: 'Password reset instructions have been sent your email!',
+          onPressed: () {
+            logOutUser(navContext);
+          });
+    } else {
+      Message.showError(
+          context: context, message: parseResponse.error!.message);
+    }
+  }
+
+  _futureData() async {
+    var profile = await Service.getUserProfile(userObjectId);
+    var user = await Service.getUserByToken(userToken);
+    return {'profile': profile, 'user': user};
   }
 
   @override
@@ -64,7 +92,7 @@ class _SettingsState extends State<Settings> {
           ),
         ),
         FutureBuilder(
-          future: Service.getUserProfile(userObjectId),
+          future: _futureData(),
           builder: (context, snapshot) {
             switch (snapshot.connectionState) {
               case ConnectionState.waiting:
@@ -95,8 +123,8 @@ class _SettingsState extends State<Settings> {
               minimumSize: const Size(30, 10),
               backgroundColor: Colors.white,
             ),
-            onPressed: () => {
-              Navigator.of(context).push(buildRoute(const Update())),
+            onPressed: () {
+              Navigator.of(context).push(buildRoute(const Update()));
             },
             child: const Text(
               'Update Profile',
@@ -117,8 +145,9 @@ class _SettingsState extends State<Settings> {
               minimumSize: const Size(30, 10),
               backgroundColor: Colors.white,
             ),
-            onPressed: () => {
-              Navigator.of(context).push(buildRoute(const ChangePassword())),
+            onPressed: () {
+              resetPassword(context, navigatorContext);
+              // Navigator.of(context).push(buildRoute(const Password()));
             },
             child: const Text(
               'Change Password',
@@ -146,26 +175,6 @@ class _SettingsState extends State<Settings> {
               'Logout',
               style: TextStyle(
                 color: Colors.black87,
-                fontSize: 17,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-          child: TextButton(
-            style: TextButton.styleFrom(
-              elevation: 1,
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              minimumSize: const Size(30, 10),
-              backgroundColor: Colors.white,
-            ),
-            onPressed: () => {},
-            child: const Text(
-              'Delete Account',
-              style: TextStyle(
-                color: Colors.red,
                 fontSize: 17,
                 fontWeight: FontWeight.w400,
               ),
@@ -225,7 +234,7 @@ class _SettingsState extends State<Settings> {
   }
 
   Widget buildProfileData(profile) {
-    ProfileData? data = ProfileData.fromJson(profile);
+    ProfileData? data = ProfileData.fromJson(profile['profile']);
 
     var stringInBytes = utf8.encode(data.userObjectId);
     String hashImage = sha256.convert(stringInBytes).toString();
@@ -256,13 +265,70 @@ class _SettingsState extends State<Settings> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
               child: Text(
-                'Email: ${data.email}',
+                'Email: ${profile['user']['email']}',
                 style: const TextStyle(fontSize: 16, fontFamily: defaultFont),
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class Message {
+  static void showSuccess(
+      {required BuildContext context,
+      required String message,
+      VoidCallback? onPressed}) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Success!"),
+          content: Text(message),
+          actions: <Widget>[
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: buttonBackgroundColor,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (onPressed != null) {
+                  onPressed();
+                }
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  static void showError(
+      {required BuildContext context,
+      required String message,
+      VoidCallback? onPressed}) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Error!"),
+          content: Text(message),
+          actions: <Widget>[
+            ElevatedButton(
+              child: const Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (onPressed != null) {
+                  onPressed();
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

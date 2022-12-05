@@ -107,7 +107,7 @@ class _UpdateState extends State<Update> {
 
     firstnameController.text = data.firstName;
     lastnameController.text = data.lastName;
-    emailController.text = data.email;
+    // emailController.text = data.email;
 
     List<DropdownItems> idTypes;
     if (data.accountType == Constant.accountDriver) {
@@ -151,7 +151,7 @@ class _UpdateState extends State<Update> {
         profile.set('userObjectId', objectId);
         profile.set('firstName', firstnameController.text.trim());
         profile.set('lastName', lastnameController.text.trim());
-        profile.set('email', emailController.text.trim());
+        // profile.set('email', emailController.text.trim());
 
         if (idType != null) {
           profile.set('idType', idType);
@@ -166,7 +166,7 @@ class _UpdateState extends State<Update> {
         var response = await profile.update();
         if (response.success) {
           navContext.push(buildRoute(const Index(
-            defaultIndex: 2,
+            defaultIndex: 1,
           )));
         }
       }
@@ -227,31 +227,31 @@ class _UpdateState extends State<Update> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              child: TextFormField(
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return "Please enter your email.";
-                  }
-                  return null;
-                },
-                controller: emailController,
-                decoration: InputDecoration(
-                  floatingLabelStyle: const TextStyle(
-                    color: Color.fromARGB(255, 130, 157, 72),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                        color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
-                    borderRadius: BorderRadius.circular(5.0),
-                  ),
-                  border: const OutlineInputBorder(),
-                  labelText: 'Email Address',
-                ),
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+            //   child: TextFormField(
+            //     keyboardType: TextInputType.emailAddress,
+            //     validator: (value) {
+            //       if (value!.isEmpty) {
+            //         return "Please enter your email.";
+            //       }
+            //       return null;
+            //     },
+            //     controller: emailController,
+            //     decoration: InputDecoration(
+            //       floatingLabelStyle: const TextStyle(
+            //         color: Color.fromARGB(255, 130, 157, 72),
+            //       ),
+            //       focusedBorder: OutlineInputBorder(
+            //         borderSide: const BorderSide(
+            //             color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
+            //         borderRadius: BorderRadius.circular(5.0),
+            //       ),
+            //       border: const OutlineInputBorder(),
+            //       labelText: 'Email Address',
+            //     ),
+            //   ),
+            // ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: DropdownButtonHideUnderline(
@@ -407,7 +407,7 @@ class _UpdateState extends State<Update> {
       profile.set('userObjectId', objectId);
       profile.set('firstName', firstnameController.text.trim());
       profile.set('lastName', lastnameController.text.trim());
-      profile.set('email', emailController.text.trim());
+      // profile.set('email', emailController.text.trim());
       if (accountType == Constant.accountDriver) {
         idType = 200;
       }
@@ -420,7 +420,7 @@ class _UpdateState extends State<Update> {
 
       if (response.success) {
         navContext.push(buildRoute(const Index(
-          defaultIndex: 2,
+          defaultIndex: 1,
         )));
       }
     }
@@ -491,28 +491,28 @@ class _UpdateState extends State<Update> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              child: TextFormField(
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  return (value!.isEmpty) ? "Please enter your email." : null;
-                },
-                controller: emailController,
-                decoration: InputDecoration(
-                  floatingLabelStyle: const TextStyle(
-                    color: Color.fromARGB(255, 130, 157, 72),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                        color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
-                    borderRadius: BorderRadius.circular(5.0),
-                  ),
-                  border: const OutlineInputBorder(),
-                  labelText: 'Email Address',
-                ),
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+            //   child: TextFormField(
+            //     keyboardType: TextInputType.emailAddress,
+            //     validator: (value) {
+            //       return (value!.isEmpty) ? "Please enter your email." : null;
+            //     },
+            //     controller: emailController,
+            //     decoration: InputDecoration(
+            //       floatingLabelStyle: const TextStyle(
+            //         color: Color.fromARGB(255, 130, 157, 72),
+            //       ),
+            //       focusedBorder: OutlineInputBorder(
+            //         borderSide: const BorderSide(
+            //             color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
+            //         borderRadius: BorderRadius.circular(5.0),
+            //       ),
+            //       border: const OutlineInputBorder(),
+            //       labelText: 'Email Address',
+            //     ),
+            //   ),
+            // ),
             Padding(
               padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
               child: TextButton.icon(

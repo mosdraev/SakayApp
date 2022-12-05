@@ -20,7 +20,8 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   TextEditingController mobileNumberController = TextEditingController(),
       passwordController = TextEditingController(),
-      confirmPasswordController = TextEditingController();
+      confirmPasswordController = TextEditingController(),
+      emailController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -43,9 +44,10 @@ class _RegisterState extends State<Register> {
   void registerUser(navigator) async {
     final username = mobileNumberController.text;
     final password = passwordController.text;
+    final email = emailController.text.trim();
 
-    ParseUser userObject = ParseUser.createUser(username, password);
-    var response = await userObject.signUp(allowWithoutEmail: true);
+    ParseUser userObject = ParseUser.createUser(username, password, email);
+    var response = await userObject.signUp();
 
     if (response.success) {
       final prefs = await SharedPreferences.getInstance();
@@ -75,6 +77,37 @@ class _RegisterState extends State<Register> {
               const GetStarted(),
               const FillupForm(),
               _mobileNumberField(),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                child: TextFormField(
+                  validator: (value) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        !value.contains('@') ||
+                        !value.contains('.')) {
+                      return 'Invalid Email';
+                    }
+                    return null;
+                  },
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(
+                      Icons.email_outlined,
+                      color: Colors.black26,
+                    ),
+                    floatingLabelStyle: const TextStyle(
+                        color: Color.fromARGB(255, 130, 157, 72)),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                    border: const OutlineInputBorder(),
+                    labelText: 'Email Address',
+                  ),
+                ),
+              ),
               _passwordField(),
               _confirmPasswordField(),
               Padding(

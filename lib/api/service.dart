@@ -23,6 +23,12 @@ class Service {
     return currentUser;
   }
 
+  static getUserByToken(token) async {
+    ParseResponse? currentUser =
+        await ParseUser.getCurrentUserFromServer(token);
+    return currentUser?.result;
+  }
+
   static getUserProfile(objectId) async {
     final QueryBuilder<ParseObject> parseQuery =
         QueryBuilder<ParseObject>(ParseObject('Profile'));
@@ -61,8 +67,25 @@ class Service {
     final QueryBuilder<ParseObject> parseQuery =
         QueryBuilder<ParseObject>(ParseObject('Place'));
     parseQuery.whereEqualTo('userObjectId', objectId);
+    parseQuery.orderByDescending('createdAt');
     final ParseResponse apiResponse = await parseQuery.query();
 
+    if (apiResponse.success && apiResponse.results != null) {
+      List<dynamic> data = [];
+      for (var o in apiResponse.results!) {
+        data.add(jsonDecode((o as ParseObject).toString()));
+      }
+      return data;
+    }
+    return null;
+  }
+
+  static getDriverUserPlaces(objectId) async {
+    final QueryBuilder<ParseObject> parseQuery =
+        QueryBuilder<ParseObject>(ParseObject('Place'));
+    parseQuery.whereEqualTo('driverUserObjectId', objectId);
+    parseQuery.orderByDescending('createdAt');
+    final ParseResponse apiResponse = await parseQuery.query();
     if (apiResponse.success && apiResponse.results != null) {
       List<dynamic> data = [];
       for (var o in apiResponse.results!) {

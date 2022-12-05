@@ -44,7 +44,7 @@ class _MainLayoutState extends State<MainLayout> {
           // systemNavigationBarColor: Colors.black45,
         ),
         backgroundColor: appBackgroundColor,
-        // shadowColor: Colors.transparent,
+        shadowColor: Colors.transparent,
       ),
       resizeToAvoidBottomInset: false,
       body: SafeArea(
