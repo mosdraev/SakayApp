@@ -91,6 +91,24 @@ class _PlacesState extends State<Places> {
     return response.success;
   }
 
+  clientWasPickedUp(placeObjectId) async {
+    var place = ParseObject('Place');
+    place.set('objectId', placeObjectId);
+    place.set('clientWasPickedUp', true);
+
+    var response = await place.update();
+    return response.success;
+  }
+
+  clientWasDroppedOff(placeObjectId) async {
+    var place = ParseObject('Place');
+    place.set('objectId', placeObjectId);
+    place.set('clientWasDropOff', true);
+
+    var response = await place.update();
+    return response.success;
+  }
+
   clientPaidBooking(placeObjectId) async {
     var place = ParseObject('Place');
     place.set('objectId', placeObjectId);
@@ -101,6 +119,7 @@ class _PlacesState extends State<Places> {
   }
 
   Future cancelBooking(BuildContext context, placeObjectId, accountType) {
+    Navigator.pop(context);
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -204,6 +223,7 @@ class _PlacesState extends State<Places> {
   }
 
   Future clientPaymentDialog(BuildContext context, placeObjectId) {
+    Navigator.pop(context);
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -353,66 +373,223 @@ class _PlacesState extends State<Places> {
           var placeArray = placeAddress[index][placeObjectId];
           var from = (placeArray != null) ? placeArray['from'] : '';
           var to = (placeArray != null) ? placeArray['to'] : '';
-          // print(from);
-          // print(placeObject);
 
-          return placeObject.clientCancelled
-              ? const Text('')
-              : Card(
-                  color: placeObject.clientCancelled ? Colors.grey[300] : null,
-                  elevation: 2,
-                  child: ListTile(
-                    onTap: () {
-                      if (!placeObject.clientCancelled) {
-                        cancelBooking(
-                            context, placeObjectId, userData['accountType']);
-                      }
-                    },
-                    onLongPress: () {
-                      if (userData['accountType'] != Constant.userAccountType) {
-                        clientPaymentDialog(context, placeObjectId);
-                      }
-                    },
-                    leading: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        placeObject.clientCancelled
-                            ? const Icon(
-                                Icons.location_off,
-                                size: 25,
-                              )
-                            : const Icon(Icons.place, size: 25),
-                      ],
-                    ),
-                    trailing: placeObject.clientCancelled
-                        ? null
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: const [
-                              Icon(Icons.arrow_forward_ios,
-                                  size: 25, color: buttonBackgroundColor),
-                            ],
-                          ),
-                    title: Padding(
-                      padding: const EdgeInsets.only(top: 2.0),
-                      child: Text('To: $to',
-                          maxLines: 2, overflow: TextOverflow.ellipsis),
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Text('From: $from',
-                          maxLines: 2, overflow: TextOverflow.ellipsis),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 15.0, vertical: 5.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                    dense: true,
+          return Card(
+            color: placeObject.clientCancelled ? Colors.grey[300] : null,
+            elevation: 2,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  onTap: () {
+                    if (userData['accountType'] == Constant.accountPassenger) {
+                      _showModalClient(
+                          context, placeObjectId, userData['accountType']);
+                    } else {
+                      _showModalDriver(
+                          context, placeObjectId, userData['accountType']);
+                    }
+                  },
+                  onLongPress: () {
+                    if (userData['accountType'] == Constant.accountPassenger) {
+                      _showModalClientInfo(context, placeObject);
+                    } else {
+                      _showModalDriverInfo(context, placeObject);
+                    }
+                  },
+                  leading: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      placeObject.clientCancelled
+                          ? const Icon(
+                              Icons.location_off,
+                              size: 25,
+                            )
+                          : const Icon(Icons.place, size: 25),
+                    ],
                   ),
-                );
+                  trailing: placeObject.clientCancelled
+                      ? null
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: const [
+                            Icon(Icons.arrow_forward_ios,
+                                size: 25, color: buttonBackgroundColor),
+                          ],
+                        ),
+                  title: Padding(
+                    padding: const EdgeInsets.only(top: 2.0),
+                    child: Text('To: $to',
+                        maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text('From: $from',
+                        maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 15.0, vertical: 5.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                  dense: true,
+                ),
+              ],
+            ),
+          );
         },
       ),
+    );
+  }
+
+  void _showModalClient(context, placeObjectId, accountType) {
+    showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(
+                  Icons.cancel_outlined,
+                  color: Colors.orange,
+                ),
+                title: const Text('Cancel Booking'),
+                onTap: () {
+                  cancelBooking(context, placeObjectId, accountType);
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.drive_eta_outlined,
+                  color: Colors.green,
+                ),
+                title: const Text('Picked Up by Driver'),
+                onTap: () {
+                  clientWasPickedUp(placeObjectId);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.drive_eta_rounded,
+                  color: Colors.red,
+                ),
+                title: const Text('Dropped off by Driver'),
+                onTap: () {
+                  clientWasDroppedOff(placeObjectId);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+  void _showModalDriver(context, placeObjectId, accountType) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            ListTile(
+              leading: const Icon(
+                Icons.cancel_outlined,
+                color: Colors.orange,
+              ),
+              title: const Text('Cancel Booking'),
+              onTap: () {
+                cancelBooking(context, placeObjectId, accountType);
+              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.paid_outlined,
+                color: Colors.green,
+              ),
+              title: const Text('Client Paid'),
+              onTap: () {
+                clientPaymentDialog(context, placeObjectId);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showModalDriverInfo(context, placeObject) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            placeObject.clientCancelled == true
+                ? ListTile(
+                    leading: const Icon(
+                      Icons.cancel_outlined,
+                      color: Colors.red,
+                    ),
+                    title: const Text('Client Cancelled'),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                : const Text(''),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showModalClientInfo(context, placeObject) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            ListTile(
+              leading: Icon(
+                Icons.check_circle_outline,
+                color: (placeObject.clientWasPickedUp == true)
+                    ? Colors.green
+                    : null,
+              ),
+              title: const Text('Client was picked up.'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.check_circle_outline,
+                color: (placeObject.clientWasDropOff == true)
+                    ? Colors.green
+                    : null,
+              ),
+              title: const Text('Client was dropped off.'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            placeObject.driverCancelled == true
+                ? ListTile(
+                    leading: const Icon(
+                      Icons.cancel_outlined,
+                      color: Colors.red,
+                    ),
+                    title: const Text('Driver Cancelled'),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                : const Text(''),
+          ],
+        );
+      },
     );
   }
 }
