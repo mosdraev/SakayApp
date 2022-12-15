@@ -7,8 +7,8 @@ import 'package:flutter/widgets.dart';
 import 'package:parse_server_sdk/parse_server_sdk.dart';
 import 'package:sakay_v2/static/constant.dart';
 
-const keyApplicationId = 'MhFXqr7K8dQIAMX61Ag8dTHDfkI4rkqOSMNCtHZ8';
-const keyClientKey = '99uTxRU26iN0U5t9g3zoCcbqhbZdgvFHS0Ytvy5U';
+const keyApplicationId = 'lBeOw2i9gvsTsvfCMiPh51TwfiVqPiPSZF6liOss';
+const keyClientKey = 'tm17H6rNXSBskhZ8097NdIL6SeUpXe7weENTz7vg';
 const keyParseServerUrl = 'https://parseapi.back4app.com';
 
 class Service {

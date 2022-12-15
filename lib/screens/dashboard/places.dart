@@ -10,6 +10,7 @@ import 'package:sakay_v2/models/place.dart';
 import 'package:sakay_v2/static/constant.dart';
 import 'package:sakay_v2/static/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math' show cos, sqrt, asin;
 
 class Places extends StatefulWidget {
   const Places({super.key});
@@ -27,6 +28,15 @@ class _PlacesState extends State<Places> {
   @override
   void initState() {
     super.initState();
+  }
+
+  double calculateDistance(lat1, lon1, lat2, lon2) {
+    var p = 0.017453292519943295;
+    var c = cos;
+    var a = 0.5 -
+        c((lat2 - lat1) * p) / 2 +
+        c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
+    return 12742 * asin(sqrt(a));
   }
 
   _futureData() async {
@@ -53,6 +63,10 @@ class _PlacesState extends State<Places> {
         var toPlaceMark =
             await placemarkFromCoordinates(to.latitude, to.longitude);
 
+        var distance = calculateDistance(
+            from.latitude, from.longitude, to.latitude, to.longitude);
+        var aveRate = distance * Constant.standardRate;
+
         var fromAddress = Address.getAddress(fromPlaceMark.first);
         var toAddress = Address.getAddress(toPlaceMark.first);
 
@@ -60,7 +74,12 @@ class _PlacesState extends State<Places> {
         // print(toPlaceMark);
 
         placeAddress.add({
-          place['objectId']: {'from': fromAddress, 'to': toAddress}
+          place['objectId']: {
+            'from': fromAddress,
+            'to': toAddress,
+            'distance': distance,
+            'aveRate': aveRate
+          }
         });
 
         // placeAddress.add({
@@ -373,6 +392,8 @@ class _PlacesState extends State<Places> {
           var placeArray = placeAddress[index][placeObjectId];
           var from = (placeArray != null) ? placeArray['from'] : '';
           var to = (placeArray != null) ? placeArray['to'] : '';
+          var distance = placeArray['distance'];
+          var aveRate = placeArray['aveRate'];
 
           return Card(
             color: placeObject.clientCancelled ? Colors.grey[300] : null,
@@ -383,8 +404,8 @@ class _PlacesState extends State<Places> {
                 ListTile(
                   onTap: () {
                     if (userData['accountType'] == Constant.accountPassenger) {
-                      _showModalClient(
-                          context, placeObjectId, userData['accountType']);
+                      _showModalClient(context, placeObjectId,
+                          userData['accountType'], distance, aveRate);
                     } else {
                       _showModalDriver(
                           context, placeObjectId, userData['accountType']);
@@ -392,7 +413,8 @@ class _PlacesState extends State<Places> {
                   },
                   onLongPress: () {
                     if (userData['accountType'] == Constant.accountPassenger) {
-                      _showModalClientInfo(context, placeObject);
+                      _showModalClientInfo(
+                          context, placeObject, distance, aveRate);
                     } else {
                       _showModalDriverInfo(context, placeObject);
                     }
@@ -442,13 +464,37 @@ class _PlacesState extends State<Places> {
     );
   }
 
-  void _showModalClient(context, placeObjectId, accountType) {
+  void _showModalClient(
+      context, placeObjectId, accountType, distance, aveRate) {
+    var stringDistance = distance.toStringAsFixed(2);
+    var stringAveRate = aveRate.toStringAsFixed(2);
+
     showModalBottomSheet(
         context: context,
         builder: (context) {
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
+              ListTile(
+                leading: const Icon(
+                  Icons.directions_outlined,
+                  color: Colors.blue,
+                ),
+                title: Text('Distance in KM - $stringDistance'),
+                onTap: () {
+                  cancelBooking(context, placeObjectId, accountType);
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.price_change_outlined,
+                  color: Colors.green,
+                ),
+                title: Text('Rate: $stringAveRate'),
+                onTap: () {
+                  cancelBooking(context, placeObjectId, accountType);
+                },
+              ),
               ListTile(
                 leading: const Icon(
                   Icons.cancel_outlined,
@@ -544,13 +590,36 @@ class _PlacesState extends State<Places> {
     );
   }
 
-  void _showModalClientInfo(context, placeObject) {
+  void _showModalClientInfo(context, placeObject, distance, aveRate) {
+    var stringDistance = distance.toStringAsFixed(2);
+    var stringAveRate = aveRate.toStringAsFixed(2);
+
     showModalBottomSheet(
       context: context,
       builder: (context) {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
+            ListTile(
+              leading: const Icon(
+                Icons.directions_outlined,
+                color: Colors.blue,
+              ),
+              title: Text('Distance in KM. $stringDistance'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.price_change_outlined,
+                color: Colors.green,
+              ),
+              title: Text('Rate: $stringAveRate'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
             ListTile(
               leading: Icon(
                 Icons.check_circle_outline,
@@ -559,6 +628,18 @@ class _PlacesState extends State<Places> {
                     : null,
               ),
               title: const Text('Client was picked up.'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.check_circle_outline,
+                color: (placeObject.clientWasDropOff == true)
+                    ? Colors.green
+                    : null,
+              ),
+              title: const Text('Client was dropped off.'),
               onTap: () {
                 Navigator.pop(context);
               },
