@@ -13,6 +13,7 @@ import 'package:sakay_v2/screens/dashboard/index.dart';
 import 'package:sakay_v2/static/constant.dart';
 import 'package:sakay_v2/static/route.dart';
 import 'package:sakay_v2/static/style.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Update extends StatefulWidget {
@@ -96,18 +97,8 @@ class _UpdateState extends State<Update> {
 
     final formKey = GlobalKey<FormState>();
 
-    // TextEditingController firstnameController =
-    //     TextEditingController(text: data.firstName);
-
-    // TextEditingController lastnameController =
-    //     TextEditingController(text: data.lastName);
-
-    // TextEditingController emailController =
-    //     TextEditingController(text: data.email);
-
     firstnameController.text = data.firstName;
     lastnameController.text = data.lastName;
-    // emailController.text = data.email;
 
     List<DropdownItems> idTypes;
     if (data.accountType == Constant.accountDriver) {
@@ -134,14 +125,27 @@ class _UpdateState extends State<Update> {
 
       final file = pickedFile.files.first;
 
+      final fileObject = File(file.path!);
       final bytes = File(file.path!).readAsBytesSync();
-      String img64 = base64Encode(bytes);
 
-      if (isFront == 1) {
-        frontImageBase64 = img64;
-      } else {
-        backImageBase64 = img64;
+      int sizeInBytes = fileObject.lengthSync();
+      double sizeInMb = sizeInBytes / (1024 * 1024);
+
+      if (sizeInMb < 5) {
+        String img64 = base64Encode(bytes);
+
+        if (isFront == 1) {
+          frontImageBase64 = img64;
+        } else {
+          backImageBase64 = img64;
+        }
       }
+
+      return null;
+    }
+
+    Image imageFromBase64String(String base64String) {
+      return Image.memory(base64Decode(base64String));
     }
 
     updateProfile() async {
@@ -151,7 +155,6 @@ class _UpdateState extends State<Update> {
         profile.set('userObjectId', objectId);
         profile.set('firstName', firstnameController.text.trim());
         profile.set('lastName', lastnameController.text.trim());
-        // profile.set('email', emailController.text.trim());
 
         if (idType != null) {
           profile.set('idType', idType);
@@ -227,31 +230,6 @@ class _UpdateState extends State<Update> {
                 ),
               ),
             ),
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-            //   child: TextFormField(
-            //     keyboardType: TextInputType.emailAddress,
-            //     validator: (value) {
-            //       if (value!.isEmpty) {
-            //         return "Please enter your email.";
-            //       }
-            //       return null;
-            //     },
-            //     controller: emailController,
-            //     decoration: InputDecoration(
-            //       floatingLabelStyle: const TextStyle(
-            //         color: Color.fromARGB(255, 130, 157, 72),
-            //       ),
-            //       focusedBorder: OutlineInputBorder(
-            //         borderSide: const BorderSide(
-            //             color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
-            //         borderRadius: BorderRadius.circular(5.0),
-            //       ),
-            //       border: const OutlineInputBorder(),
-            //       labelText: 'Email Address',
-            //     ),
-            //   ),
-            // ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: DropdownButtonHideUnderline(
@@ -277,6 +255,18 @@ class _UpdateState extends State<Update> {
                 ),
               ),
             ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              child: Text('Image size should be up to 5MB.'),
+            ),
+            Padding(
+              padding: (originProfileData['idFrontImage'] != null)
+                  ? const EdgeInsets.symmetric(horizontal: 15, vertical: 10)
+                  : const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
+              child: (originProfileData['idFrontImage'] != null)
+                  ? imageFromBase64String(originProfileData['idFrontImage'])
+                  : const Text(''),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: TextButton(
@@ -298,6 +288,14 @@ class _UpdateState extends State<Update> {
               ),
             ),
             Padding(
+              padding: (originProfileData['idBackImage'] != null)
+                  ? const EdgeInsets.symmetric(horizontal: 15, vertical: 10)
+                  : const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+              child: (originProfileData['idBackImage'] != null)
+                  ? imageFromBase64String(originProfileData['idBackImage'])
+                  : const Text(''),
+            ),
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: ElevatedButton(
                 style: TextButton.styleFrom(
@@ -316,9 +314,6 @@ class _UpdateState extends State<Update> {
                   ),
                 ),
               ),
-            ),
-            const SizedBox(
-              height: 50,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 10),
