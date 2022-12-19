@@ -119,9 +119,9 @@ class _UpdateState extends State<Update> {
           child: Text(item.name),
         );
 
-    void openFileImageExplorer({isFront = 1}) async {
+    Future<bool> openFileImageExplorer({isFront = 1}) async {
       FilePickerResult? pickedFile = await FilePicker.platform.pickFiles();
-      if (pickedFile == null) return;
+      if (pickedFile == null) return false;
 
       final file = pickedFile.files.first;
 
@@ -141,7 +141,7 @@ class _UpdateState extends State<Update> {
         }
       }
 
-      return null;
+      return false;
     }
 
     Image imageFromBase64String(String base64String) {
@@ -276,7 +276,15 @@ class _UpdateState extends State<Update> {
                   minimumSize: const Size(30, 10),
                   backgroundColor: Colors.white,
                 ),
-                onPressed: () => openFileImageExplorer(isFront: 1),
+                onPressed: () async {
+                  var result = await openFileImageExplorer(isFront: 1);
+
+                  if (result == false) {
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Image exceeded 5MB limit.')));
+                  }
+                },
                 child: const Text(
                   'Select Front ID Image',
                   style: TextStyle(
@@ -304,7 +312,15 @@ class _UpdateState extends State<Update> {
                   minimumSize: const Size(30, 10),
                   backgroundColor: Colors.white,
                 ),
-                onPressed: () => openFileImageExplorer(isFront: 0),
+                onPressed: () async {
+                  var result = await openFileImageExplorer(isFront: 0);
+
+                  if (result == false) {
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Image exceeded 5MB limit.')));
+                  }
+                },
                 child: const Text(
                   'Select Back ID Image',
                   style: TextStyle(
@@ -381,20 +397,29 @@ class _UpdateState extends State<Update> {
           child: Text(item.name),
         );
 
-    void openFileImageExplorer({isFront = 1}) async {
+    Future<bool> openFileImageExplorer({isFront = 1}) async {
       FilePickerResult? pickedFile = await FilePicker.platform.pickFiles();
-      if (pickedFile == null) return;
+      if (pickedFile == null) return false;
 
       final file = pickedFile.files.first;
 
+      final fileObject = File(file.path!);
       final bytes = File(file.path!).readAsBytesSync();
-      String img64 = base64Encode(bytes);
 
-      if (isFront == 1) {
-        frontImageBase64 = img64;
-      } else {
-        backImageBase64 = img64;
+      int sizeInBytes = fileObject.lengthSync();
+      double sizeInMb = sizeInBytes / (1024 * 1024);
+
+      if (sizeInMb < 5) {
+        String img64 = base64Encode(bytes);
+
+        if (isFront == 1) {
+          frontImageBase64 = img64;
+        } else {
+          backImageBase64 = img64;
+        }
       }
+
+      return false;
     }
 
     saveProfile() async {
@@ -402,7 +427,6 @@ class _UpdateState extends State<Update> {
       profile.set('userObjectId', objectId);
       profile.set('firstName', firstnameController.text.trim());
       profile.set('lastName', lastnameController.text.trim());
-      // profile.set('email', emailController.text.trim());
       if (accountType == Constant.accountDriver) {
         idType = 200;
       }
@@ -486,28 +510,6 @@ class _UpdateState extends State<Update> {
                 ),
               ),
             ),
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-            //   child: TextFormField(
-            //     keyboardType: TextInputType.emailAddress,
-            //     validator: (value) {
-            //       return (value!.isEmpty) ? "Please enter your email." : null;
-            //     },
-            //     controller: emailController,
-            //     decoration: InputDecoration(
-            //       floatingLabelStyle: const TextStyle(
-            //         color: Color.fromARGB(255, 130, 157, 72),
-            //       ),
-            //       focusedBorder: OutlineInputBorder(
-            //         borderSide: const BorderSide(
-            //             color: Color.fromARGB(255, 130, 157, 72), width: 2.0),
-            //         borderRadius: BorderRadius.circular(5.0),
-            //       ),
-            //       border: const OutlineInputBorder(),
-            //       labelText: 'Email Address',
-            //     ),
-            //   ),
-            // ),
             Padding(
               padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
               child: TextButton.icon(
@@ -615,7 +617,15 @@ class _UpdateState extends State<Update> {
                   minimumSize: const Size(30, 10),
                   backgroundColor: Colors.white,
                 ),
-                onPressed: () => openFileImageExplorer(isFront: 1),
+                onPressed: () async {
+                  var result = await openFileImageExplorer(isFront: 1);
+
+                  if (result == false) {
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Image exceeded 5MB limit.')));
+                  }
+                },
                 child: const Text(
                   'Select Front ID Image',
                   style: TextStyle(
@@ -635,7 +645,15 @@ class _UpdateState extends State<Update> {
                   minimumSize: const Size(30, 10),
                   backgroundColor: Colors.white,
                 ),
-                onPressed: () => openFileImageExplorer(isFront: 0),
+                onPressed: () async {
+                  var result = await openFileImageExplorer(isFront: 0);
+
+                  if (result == false) {
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Image exceeded 5MB limit.')));
+                  }
+                },
                 child: const Text(
                   'Select Back ID Image',
                   style: TextStyle(
