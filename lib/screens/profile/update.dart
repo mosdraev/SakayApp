@@ -139,8 +139,12 @@ class _UpdateState extends State<Update> {
         } else {
           backImageBase64 = img64;
         }
+
+        FilePickerStatus.done;
+        return true;
       }
 
+      FilePickerStatus.done;
       return false;
     }
 
@@ -417,8 +421,12 @@ class _UpdateState extends State<Update> {
         } else {
           backImageBase64 = img64;
         }
+
+        FilePickerStatus.done;
+        return true;
       }
 
+      FilePickerStatus.done;
       return false;
     }
 
