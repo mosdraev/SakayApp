@@ -490,7 +490,7 @@ class _PlacesState extends State<Places> {
                   Icons.price_change_outlined,
                   color: Colors.green,
                 ),
-                title: Text('Rate: $stringAveRate'),
+                title: Text('Rate: PHP $stringAveRate'),
                 onTap: () {
                   cancelBooking(context, placeObjectId, accountType);
                 },
@@ -615,7 +615,7 @@ class _PlacesState extends State<Places> {
                 Icons.price_change_outlined,
                 color: Colors.green,
               ),
-              title: Text('Rate: $stringAveRate'),
+              title: Text('Rate: PHP $stringAveRate'),
               onTap: () {
                 Navigator.pop(context);
               },
