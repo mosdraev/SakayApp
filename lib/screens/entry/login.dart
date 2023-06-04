@@ -51,15 +51,19 @@ class _LoginState extends State<Login> {
 
       var userProfile = await Service.getUserProfile(loggedInUser['objectId']);
       if (userProfile != null) {
-        navigator.push(buildRoute(
-          const Index(
-            defaultIndex: 0,
-          ),
-        ));
+        navigator.pushAndRemoveUntil(
+            buildRoute(
+              const Index(
+                defaultIndex: 0,
+              ),
+            ),
+            (route) => false);
       } else {
-        navigator.push(buildRoute(
-          const Update(),
-        ));
+        navigator.pushAndRemoveUntil(
+            buildRoute(
+              const Update(),
+            ),
+            (route) => false);
       }
     } else {
       setState(() {

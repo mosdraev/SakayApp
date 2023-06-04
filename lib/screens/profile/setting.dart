@@ -42,9 +42,11 @@ class _SettingsState extends State<Settings> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(Constant.userIsLoggedIn, false);
 
-    navigatorContext.push(buildRoute(
-      const Login(),
-    ));
+    navigatorContext.pushAndRemoveUntil(
+        buildRoute(
+          const Login(),
+        ),
+        (route) => false);
   }
 
   resetPassword(context, navContext) async {
@@ -124,7 +126,8 @@ class _SettingsState extends State<Settings> {
               backgroundColor: Colors.white,
             ),
             onPressed: () {
-              Navigator.of(context).push(buildRoute(const Update()));
+              Navigator.of(context).pushAndRemoveUntil(
+                  buildRoute(const Update()), (route) => false);
             },
             child: const Text(
               'Update Profile',
@@ -234,45 +237,50 @@ class _SettingsState extends State<Settings> {
   }
 
   Widget buildProfileData(profile) {
-    ProfileData? data = ProfileData.fromJson(profile['profile']);
+    if (profile['profile'] != null) {
+      ProfileData? data = ProfileData.fromJson(profile['profile']);
 
-    var stringInBytes = utf8.encode(data.userObjectId);
-    String hashImage = sha256.convert(stringInBytes).toString();
+      var stringInBytes = utf8.encode(data.userObjectId);
+      String hashImage = sha256.convert(stringInBytes).toString();
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        CircleAvatar(
-          backgroundColor: const Color(0xff9EB86D),
-          radius: 40,
-          child: CircleAvatar(
-            backgroundColor: Colors.cyan[100],
-            backgroundImage: NetworkImage(
-                'http://www.gravatar.com/avatar/$hashImage?d=identicon'),
-            radius: 39,
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            backgroundColor: const Color(0xff9EB86D),
+            radius: 40,
+            child: CircleAvatar(
+              backgroundColor: Colors.cyan[100],
+              backgroundImage: NetworkImage(
+                  'http://www.gravatar.com/avatar/$hashImage?d=identicon'),
+              radius: 39,
+            ),
           ),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-              child: Text(
-                'Name: ${data.firstName} ${data.lastName}',
-                style: const TextStyle(fontSize: 16, fontFamily: defaultFont),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                child: Text(
+                  'Name: ${data.firstName} ${data.lastName}',
+                  style: const TextStyle(fontSize: 16, fontFamily: defaultFont),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-              child: Text(
-                'Email: ${profile['user']['email']}',
-                style: const TextStyle(fontSize: 16, fontFamily: defaultFont),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                child: Text(
+                  'Email: ${profile['user']['email']}',
+                  style: const TextStyle(fontSize: 16, fontFamily: defaultFont),
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
-    );
+            ],
+          ),
+        ],
+      );
+    }
+    return buildProfilePlaceholder();
   }
 }
 

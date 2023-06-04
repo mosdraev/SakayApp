@@ -446,9 +446,11 @@ class _UpdateState extends State<Update> {
       var response = await profile.save();
 
       if (response.success) {
-        navContext.push(buildRoute(const Index(
-          defaultIndex: 1,
-        )));
+        navContext.pushAndRemoveUntil(
+            buildRoute(const Index(
+              defaultIndex: 1,
+            )),
+            (route) => false);
       }
     }
 

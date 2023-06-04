@@ -84,8 +84,6 @@ class _IndexState extends State<Index> {
                       return const LookForRide();
                     }
                   }
-                } else {
-                  return const Center(child: Text('Empty Results'));
                 }
               }
           }
